@@ -1,12 +1,19 @@
 [package]
-name = "satchel-controller"
+name = "satchel_controller"
 version = "0.1.0"
 authors = ["William Stevens <contact@wastevensv.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "satchel"
+path = "src/lib.rs"
+
 [dependencies]
 rocket = "0.4"
-diesel = { version = "1.0", features = ["mysql"] }
+rocket_contrib = { version = "0.4", features = ["diesel_mysql_pool"] }
+diesel = { version = "1.4", features = ["mysql", "r2d2"] }
+r2d2 = "0.8"
+diesel_migrations = { version = "1.4", features = ["mysql"] }
 dotenv = "0.9.0"
