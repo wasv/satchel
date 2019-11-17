@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly-alpine
+FROM rustlang/rust:nightly-slim
 
 WORKDIR /usr/src/myapp
 COPY . .
