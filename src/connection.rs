@@ -26,11 +26,13 @@ type Pool = r2d2::Pool<ConnectionManager<MysqlConnection>>;
 
 pub fn init_pool() -> Pool {
     let manager = ConnectionManager::<MysqlConnection>::new(database_url());
-    Pool::new(manager)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url()))
+    let pool = Pool::new(manager)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url()));
+    perform_migrations(&pool);
+    pool
 }
 
-pub fn perform_migrations(pool: Pool) {
+pub fn perform_migrations(pool: &Pool) {
     let conn = pool.get().unwrap();
     embedded_migrations::run(&conn).unwrap_or_else(|_| panic!("Error running migration."));
 }

@@ -5,7 +5,9 @@ extern crate dotenv;
 extern crate diesel_migrations;
 extern crate r2d2;
 extern crate rocket;
+#[macro_use]
+extern crate serde_derive;
 
-pub mod models;
-pub mod schema;
 pub mod connection;
+pub mod schema;
+pub mod models;
