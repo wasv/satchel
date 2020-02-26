@@ -1,5 +1,6 @@
-use diesel::MysqlConnection;
-use diesel::{RunQueryDsl, QueryDsl, ExpressionMethods};
+use diesel::Connection;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+
 use crate::schema::posts;
 
 #[derive(Queryable, AsChangeset, Insertable, Serialize, Deserialize)]
@@ -11,7 +12,7 @@ pub struct Post {
     pub published: bool,
 }
 impl Post {
-    pub fn create(post: Post, connection: &MysqlConnection) -> Post {
+    pub fn create<Conn: Connection>(post: Post, connection: &Conn) -> Post {
         diesel::insert_into(posts::table)
             .values(&post)
             .execute(connection)
@@ -23,21 +24,21 @@ impl Post {
             .unwrap()
     }
 
-    pub fn read(connection: &MysqlConnection) -> Vec<Post> {
+    pub fn read<Conn: Connection>(connection: &Conn) -> Vec<Post> {
         posts::table
             .order(posts::id.asc())
             .load::<Post>(connection)
             .unwrap()
     }
 
-    pub fn update(id: i32, post: Post, connection: &MysqlConnection) -> bool {
+    pub fn update<Conn: Connection>(id: i32, post: Post, connection: &Conn) -> bool {
         diesel::update(posts::table.find(id))
             .set(&post)
             .execute(connection)
             .is_ok()
     }
 
-    pub fn delete(id: i32, connection: &MysqlConnection) -> bool {
+    pub fn delete<Conn: Connection>(id: i32, connection: &Conn) -> bool {
         diesel::delete(posts::table.find(id))
             .execute(connection)
             .is_ok()
