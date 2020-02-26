@@ -6,6 +6,6 @@ RUN apt-get update && apt-get install -y default-libmysqlclient-dev \
 WORKDIR /usr/src/myapp
 COPY . .
 
-RUN cargo install --path .
+RUN cargo install --path . --no-default-features --features mysql
 
 CMD ["main"]
