@@ -1,4 +1,3 @@
-use diesel::prelude::*;
 use rocket::{Outcome, Request, State};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
@@ -9,8 +8,26 @@ use std::ops::Deref;
 use r2d2;
 use diesel::r2d2::ConnectionManager;
 
+#[cfg(feature = "sqlite")]
+use diesel::sqlite::SqliteConnection;
+#[cfg(all(feature = "mysql", not(feature = "sqlite")))]
+use diesel::mysql::MysqlConnection;
+
+
 embed_migrations!("migrations/");
 
+#[cfg(feature = "sqlite")]
+pub(crate) type Conn = SqliteConnection;
+#[cfg(all(feature = "mysql", not(feature = "sqlite")))]
+pub(crate) type Conn = MysqlConnection;
+
+#[cfg(feature = "sqlite")]
+fn database_url() -> String {
+    dotenv().ok();
+    env::var("DATABASE_PATH").unwrap_or("satchel.db".to_string())
+}
+
+#[cfg(all(feature = "mysql", not(feature = "sqlite")))]
 fn database_url() -> String {
     dotenv().ok();
     let dbhost = env::var("DATABASE_HOST").expect("DATABASE_HOST must be set");
@@ -20,12 +37,12 @@ fn database_url() -> String {
     format!("mysql://{}:{}@{}/{}", dbuser, dbpass, dbhost, dbname)
 }
 
-pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<MysqlConnection>>);
+pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<Conn>>);
 
-type Pool = r2d2::Pool<ConnectionManager<MysqlConnection>>;
+type Pool = r2d2::Pool<ConnectionManager<Conn>>;
 
 pub fn init_pool() -> Pool {
-    let manager = ConnectionManager::<MysqlConnection>::new(database_url());
+    let manager = ConnectionManager::<Conn>::new(database_url());
     let pool = Pool::new(manager)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url()));
     perform_migrations(&pool);
@@ -50,7 +67,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
 }
 
 impl Deref for DbConn {
-    type Target = MysqlConnection;
+    type Target = Conn;
 
     fn deref(&self) -> &Self::Target {
         &self.0
