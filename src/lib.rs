@@ -9,5 +9,5 @@ extern crate rocket;
 extern crate serde_derive;
 
 pub mod connection;
-pub mod schema;
 pub mod models;
+pub mod schema;

@@ -14,24 +14,29 @@ use satchel::connection;
 use satchel::models::posts::*;
 
 #[post("/", data = "<post>")]
-fn create(post: Json<Post>, connection: connection::DbConn) -> Json<Post> {
-    let insert = Post {
+fn create(post: Json<NewPost>, connection: connection::DbConn) -> Json<Post> {
+    let insert = NewPost {
         ..post.into_inner()
     };
     Json(create_post(insert, &connection))
 }
 
 #[get("/")]
-fn read(connection: connection::DbConn) -> Json<JsonValue> {
-    Json(json!(read_post(&connection)))
+fn list_all(connection: connection::DbConn) -> Json<JsonValue> {
+    Json(json!(list_posts(&connection)))
 }
 
-#[put("/<id>", data = "<post>")]
-fn update(id: i32, post: Json<Post>, connection: connection::DbConn) -> Json<JsonValue> {
+#[get("/<id>")]
+fn read(id: i32, connection: connection::DbConn) -> Json<JsonValue> {
+    Json(json!(read_post(id, &connection)))
+}
+
+#[put("/", data = "<post>")]
+fn update(post: Json<Post>, connection: connection::DbConn) -> Json<JsonValue> {
     let update = Post {
         ..post.into_inner()
     };
-    Json(json!({ "success": update_post(id, update, &connection) }))
+    Json(json!({ "success": update_post(update, &connection) }))
 }
 
 #[delete("/<id>")]
@@ -41,7 +46,7 @@ fn delete(id: i32, connection: connection::DbConn) -> Json<JsonValue> {
 
 fn main() {
     rocket::ignite()
-        .mount("/", routes![create,read,update,delete])
+        .mount("/", routes![create, list_all, read, update, delete])
         .manage(connection::init_pool())
         .launch();
 }
